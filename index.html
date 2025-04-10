@@ -17,14 +17,14 @@
 
       const mindarThree = new MindARThree({
         container: document.querySelector("#ar-container"),
-        imageTargetSrc: './target.mind',
+        imageTargetSrc: './target.mind', // MindAR用ターゲット画像
         maxTrack: 1,
       });
 
       const { renderer, scene, camera } = mindarThree;
       const anchor = mindarThree.addAnchor(0);
 
-      // 点群を読み込む
+      // 点群読み込みと表示
       fetch('pointcloud_tameshi.xyz')
         .then(res => res.text())
         .then(text => {
