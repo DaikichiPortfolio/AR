@@ -1,36 +1,30 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <title>MindAR Point Cloud AR</title>
-  <style>
-    body { margin: 0; overflow: hidden; }
-    #ar-container { width: 100vw; height: 100vh; position: relative; }
-    canvas { position: absolute; top: 0; left: 0; }
-  </style>
-  <!-- MindAR + Three.js -->
-  <script src="https://cdn.jsdelivr.net/npm/three@0.161.0/build/three.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.4/dist/mindar-image-three.prod.js"></script>
-</head>
-<body>
-  <div id="ar-container"></div>
+  <head>
+    <meta charset="UTF-8" />
+    <title>MindAR Point Cloud</title>
+    <style>
+      body { margin: 0; overflow: hidden; }
+      #ar-container { width: 100vw; height: 100vh; }
+    </style>
+  </head>
+  <body>
+    <div id="ar-container"></div>
 
-  <script type="module">
-    import { MindARThree } from 'https://cdn.jsdelivr.net/npm/mind-ar@1.2.4/dist/mindar-image-three.prod.js';
+    <script type="module">
+      import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.161.0/build/three.module.js';
+      import { MindARThree } from 'https://cdn.jsdelivr.net/npm/mind-ar@1.2.4/dist/mindar-image-three.prod.js';
 
-    const start = async () => {
       const mindarThree = new MindARThree({
         container: document.querySelector("#ar-container"),
-        imageTargetSrc: "./target.mind",
-        maxTrack: 1
+        imageTargetSrc: './target.mind',
+        maxTrack: 1,
       });
 
       const { renderer, scene, camera } = mindarThree;
-
-      // Anchorの作成（ターゲットID = 0）
       const anchor = mindarThree.addAnchor(0);
 
-      // 点群の読み込みと表示
+      // 点群を読み込む
       fetch('pointcloud_tameshi.xyz')
         .then(res => res.text())
         .then(text => {
@@ -51,23 +45,22 @@
           const material = new THREE.PointsMaterial({
             size: 0.01,
             sizeAttenuation: true,
-            vertexColors: true
+            vertexColors: true,
           });
 
           const points = new THREE.Points(geometry, material);
-          points.scale.set(0.1, 0.1, 0.1); // 必要なら縮小
-
-          anchor.group.add(points); // ターゲット画像にくっつける
+          points.scale.set(0.1, 0.1, 0.1);
+          anchor.group.add(points);
         });
 
-      // スタート
-      await mindarThree.start();
-      renderer.setAnimationLoop(() => {
-        renderer.render(scene, camera);
-      });
-    };
+      const start = async () => {
+        await mindarThree.start();
+        renderer.setAnimationLoop(() => {
+          renderer.render(scene, camera);
+        });
+      };
 
-    start();
-  </script>
-</body>
+      start();
+    </script>
+  </body>
 </html>
