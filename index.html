@@ -25,7 +25,7 @@
       const anchor = mindarThree.addAnchor(0);
 
       // 点群読み込みと表示
-      fetch('pointcloud_tameshi.xyz')
+      fetch('./pointcloud_tameshi.xyz')
         .then(res => res.text())
         .then(text => {
           const lines = text.trim().split('\n');
