@@ -26,7 +26,12 @@
 
       // 点群読み込みと表示
       fetch('https://daikichiportfolio.github.io/AR/pointcloud_tameshi.xyz')
-        .then(res => res.text())
+        .then(res => {
+          if (!res.ok) {
+            throw new Error(`Failed to fetch the .xyz file: ${res.statusText}`);
+          }
+          return res.text();
+        })
         .then(text => {
           const lines = text.trim().split('\n');
           const positions = new Float32Array(lines.length * 3);
@@ -43,7 +48,7 @@
           geometry.setAttribute('color', new THREE.BufferAttribute(colors, 3));
 
           const material = new THREE.PointsMaterial({
-            size: 0.01,
+            size: 0.05,
             sizeAttenuation: true,
             vertexColors: true,
           });
@@ -51,6 +56,9 @@
           const points = new THREE.Points(geometry, material);
           points.scale.set(0.1, 0.1, 0.1);
           anchor.group.add(points);
+        })
+        .catch(error => {
+          console.error('Error loading point cloud:', error);
         });
 
       const start = async () => {
