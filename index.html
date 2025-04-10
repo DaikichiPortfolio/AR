@@ -20,7 +20,7 @@
       document.body.appendChild(renderer.domElement);
       document.body.appendChild(ARButton.createButton(renderer));
 
-      // ✅ 点群を読み込む
+      // 点群を読み込む
       fetch('pointcloud.xyz')
         .then(res => res.text())
         .then(text => {
