@@ -19,7 +19,7 @@
       document.body.appendChild(renderer.domElement);
       document.body.appendChild(ARButton.createButton(renderer));
 
-      fetch('pointcloud.xyz')
+      fetch('pointcloud_tameshi.xyz')
         .then(res => res.text())
         .then(text => {
           const lines = text.trim().split('\n');
