@@ -24,23 +24,26 @@
         .then(text => {
           const lines = text.trim().split('\n');
           const positions = new Float32Array(lines.length * 3);
+          const colors = new Float32Array(lines.length * 3);
 
           lines.forEach((line, i) => {
-            const [x, y, z] = line.trim().split(/\s+/).map(Number);
+            const [x, y, z, r, g, b] = line.trim().split(/\s+/).map(Number);
             positions.set([x, y, z], i * 3);
+            colors.set([r / 255, g / 255, b / 255], i * 3); // 色を0〜1の範囲に変換
           });
 
           const geometry = new THREE.BufferGeometry();
           geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+          geometry.setAttribute('color', new THREE.BufferAttribute(colors, 3)); // 色の情報を設定
 
           const material = new THREE.PointsMaterial({
-            color: 0xffffff,
             size: 0.01,
             sizeAttenuation: true,
+            vertexColors: true, // 頂点カラーを有効にする
           });
 
           const points = new THREE.Points(geometry, material);
-          points.position.set(0, 0, -1);
+          points.position.set(0, 0, -1); // AR空間内で少し前に配置
           scene.add(points);
         });
 
