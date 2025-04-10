@@ -17,7 +17,7 @@
 
       const mindarThree = new MindARThree({
         container: document.querySelector("#ar-container"),
-        imageTargetSrc: './target.mind', // MindAR用ターゲット画像
+        imageTargetSrc: 'https://daikichiportfolio.github.io/AR/target.mind', // MindAR用ターゲット画像
         maxTrack: 1,
       });
 
@@ -25,7 +25,7 @@
       const anchor = mindarThree.addAnchor(0);
 
       // 点群読み込みと表示
-      fetch('./pointcloud_tameshi.xyz')
+      fetch('https://daikichiportfolio.github.io/AR/pointcloud_tameshi.xyz')
         .then(res => res.text())
         .then(text => {
           const lines = text.trim().split('\n');
