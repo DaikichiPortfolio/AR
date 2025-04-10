@@ -1,24 +1,36 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <title>XYZ Point Cloud AR</title>
-    <style> body { margin: 0; overflow: hidden; } </style>
-  </head>
-  <body>
-    <script type="module">
-      import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.161.0/build/three.module.js';
-      import { ARButton } from 'https://cdn.jsdelivr.net/npm/three@0.161.0/examples/jsm/webxr/ARButton.js';
+<head>
+  <meta charset="UTF-8" />
+  <title>MindAR Point Cloud AR</title>
+  <style>
+    body { margin: 0; overflow: hidden; }
+    #ar-container { width: 100vw; height: 100vh; position: relative; }
+    canvas { position: absolute; top: 0; left: 0; }
+  </style>
+  <!-- MindAR + Three.js -->
+  <script src="https://cdn.jsdelivr.net/npm/three@0.161.0/build/three.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.4/dist/mindar-image-three.prod.js"></script>
+</head>
+<body>
+  <div id="ar-container"></div>
 
-      const scene = new THREE.Scene();
-      const camera = new THREE.PerspectiveCamera();
+  <script type="module">
+    import { MindARThree } from 'https://cdn.jsdelivr.net/npm/mind-ar@1.2.4/dist/mindar-image-three.prod.js';
 
-      const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
-      renderer.setSize(window.innerWidth, window.innerHeight);
-      renderer.xr.enabled = true;
-      document.body.appendChild(renderer.domElement);
-      document.body.appendChild(ARButton.createButton(renderer));
+    const start = async () => {
+      const mindarThree = new MindARThree({
+        container: document.querySelector("#ar-container"),
+        imageTargetSrc: "./target.mind",
+        maxTrack: 1
+      });
 
+      const { renderer, scene, camera } = mindarThree;
+
+      // Anchorの作成（ターゲットID = 0）
+      const anchor = mindarThree.addAnchor(0);
+
+      // 点群の読み込みと表示
       fetch('pointcloud_tameshi.xyz')
         .then(res => res.text())
         .then(text => {
@@ -29,27 +41,33 @@
           lines.forEach((line, i) => {
             const [x, y, z, r, g, b] = line.trim().split(/\s+/).map(Number);
             positions.set([x, y, z], i * 3);
-            colors.set([r / 255, g / 255, b / 255], i * 3); // 色を0〜1の範囲に変換
+            colors.set([r / 255, g / 255, b / 255], i * 3);
           });
 
           const geometry = new THREE.BufferGeometry();
           geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
-          geometry.setAttribute('color', new THREE.BufferAttribute(colors, 3)); // 色の情報を設定
+          geometry.setAttribute('color', new THREE.BufferAttribute(colors, 3));
 
           const material = new THREE.PointsMaterial({
             size: 0.01,
             sizeAttenuation: true,
-            vertexColors: true, // 頂点カラーを有効にする
+            vertexColors: true
           });
 
           const points = new THREE.Points(geometry, material);
-          points.position.set(0, 0, -1); // AR空間内で少し前に配置
-          scene.add(points);
+          points.scale.set(0.1, 0.1, 0.1); // 必要なら縮小
+
+          anchor.group.add(points); // ターゲット画像にくっつける
         });
 
+      // スタート
+      await mindarThree.start();
       renderer.setAnimationLoop(() => {
         renderer.render(scene, camera);
       });
-    </script>
-  </body>
+    };
+
+    start();
+  </script>
+</body>
 </html>
