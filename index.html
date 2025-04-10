@@ -13,10 +13,9 @@
       const scene = new THREE.Scene();
       const camera = new THREE.PerspectiveCamera();
 
-      const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: false });
+      const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
       renderer.setSize(window.innerWidth, window.innerHeight);
       renderer.xr.enabled = true;
-      renderer.setClearColor(0x000000, 1);
       document.body.appendChild(renderer.domElement);
       document.body.appendChild(ARButton.createButton(renderer));
 
