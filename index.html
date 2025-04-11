@@ -9,6 +9,7 @@
         overflow: hidden;
       }
 
+      /* カスタムUI */
       #ui {
         position: absolute;
         bottom: 20px;
@@ -39,9 +40,18 @@
         color: white;
         cursor: pointer;
       }
+
+      /* Start AR ボタンを左上に配置 */
+      .ar-button {
+        position: absolute !important;
+        top: 10px;
+        left: 10px;
+        z-index: 20;
+      }
     </style>
   </head>
   <body>
+    <!-- UIパネル -->
     <div id="ui">
       <label>点サイズ:
         <input type="range" id="sizeSlider" min="0.001" max="0.05" step="0.001" value="0.01" />
@@ -61,13 +71,17 @@
       renderer.xr.enabled = true;
       document.body.appendChild(renderer.domElement);
 
-      document.body.appendChild(ARButton.createButton(renderer, {
+      // ARButton左上に配置
+      const arButton = ARButton.createButton(renderer, {
         requiredFeatures: ['hit-test']
-      }));
+      });
+      arButton.classList.add('ar-button');
+      document.body.appendChild(arButton);
 
       let controller, reticle, hitTestSource = null, localSpace = null;
       let pointCloud = null;
 
+      // リテクル（平面表示）
       reticle = new THREE.Mesh(
         new THREE.RingGeometry(0.1, 0.15, 32).rotateX(-Math.PI / 2),
         new THREE.MeshBasicMaterial({ color: 0x00ff00 })
@@ -98,6 +112,7 @@
         });
       });
 
+      // 点群読み込み
       fetch('pointcloud_tameshi.xyz')
         .then(res => res.text())
         .then(text => {
@@ -115,6 +130,7 @@
           geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
           geometry.setAttribute('color', new THREE.BufferAttribute(colors, 3));
 
+          // 点群中心を原点に移動（配置しやすく）
           const center = new THREE.Vector3();
           for (let i = 0; i < positions.length; i += 3) {
             center.add(new THREE.Vector3(positions[i], positions[i + 1], positions[i + 2]));
@@ -133,6 +149,7 @@
           scene.add(pointCloud);
         });
 
+      // ARレンダリングループ
       renderer.setAnimationLoop((timestamp, frame) => {
         if (frame && hitTestSource) {
           const hitTestResults = frame.getHitTestResults(hitTestSource);
@@ -149,7 +166,7 @@
         renderer.render(scene, camera);
       });
 
-      // UI制御
+      // UI操作
       const sizeSlider = document.getElementById('sizeSlider');
       const toggleButton = document.getElementById('toggleButton');
 
