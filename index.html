@@ -2,15 +2,53 @@
 <html lang="ja">
   <head>
     <meta charset="UTF-8" />
-    <title>XYZ Point Cloud AR</title>
+    <title>Point Cloud AR with UI</title>
     <style>
       body {
         margin: 0;
         overflow: hidden;
       }
+
+      #ui {
+        position: absolute;
+        bottom: 20px;
+        left: 10px;
+        right: 10px;
+        background: rgba(0, 0, 0, 0.5);
+        color: white;
+        padding: 10px;
+        border-radius: 12px;
+        display: flex;
+        gap: 10px;
+        align-items: center;
+        justify-content: center;
+        font-family: sans-serif;
+        font-size: 14px;
+        z-index: 10;
+      }
+
+      input[type="range"] {
+        width: 120px;
+      }
+
+      button {
+        background: #2196f3;
+        border: none;
+        padding: 6px 12px;
+        border-radius: 6px;
+        color: white;
+        cursor: pointer;
+      }
     </style>
   </head>
   <body>
+    <div id="ui">
+      <label>点サイズ:
+        <input type="range" id="sizeSlider" min="0.001" max="0.05" step="0.001" value="0.01" />
+      </label>
+      <button id="toggleButton">非表示</button>
+    </div>
+
     <script type="module">
       import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.161.0/build/three.module.js';
       import { ARButton } from 'https://cdn.jsdelivr.net/npm/three@0.161.0/examples/jsm/webxr/ARButton.js';
@@ -27,14 +65,9 @@
         requiredFeatures: ['hit-test']
       }));
 
-      // ヒットテスト用変数
-      let controller;
-      let reticle;
-      let hitTestSource = null;
-      let localSpace = null;
+      let controller, reticle, hitTestSource = null, localSpace = null;
       let pointCloud = null;
 
-      // カーソル表示（平面を検出した位置）
       reticle = new THREE.Mesh(
         new THREE.RingGeometry(0.1, 0.15, 32).rotateX(-Math.PI / 2),
         new THREE.MeshBasicMaterial({ color: 0x00ff00 })
@@ -43,11 +76,9 @@
       reticle.visible = false;
       scene.add(reticle);
 
-      // コントローラー（タップ検出）
       controller = renderer.xr.getController(0);
       scene.add(controller);
 
-      // ユーザーがタップ → 点群をリテクル位置に配置
       controller.addEventListener('select', () => {
         if (reticle.visible && pointCloud) {
           pointCloud.position.setFromMatrixPosition(reticle.matrix);
@@ -55,7 +86,6 @@
         }
       });
 
-      // ARセッション開始 → ヒットテストセットアップ
       renderer.xr.addEventListener('sessionstart', async () => {
         const session = renderer.xr.getSession();
         const viewerSpace = await session.requestReferenceSpace('viewer');
@@ -68,12 +98,8 @@
         });
       });
 
-      // 点群読み込み
       fetch('pointcloud_tameshi.xyz')
-        .then(res => {
-          if (!res.ok) throw new Error('点群ファイルの読み込みに失敗しました');
-          return res.text();
-        })
+        .then(res => res.text())
         .then(text => {
           const lines = text.trim().split('\n');
           const positions = new Float32Array(lines.length * 3);
@@ -89,7 +115,6 @@
           geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
           geometry.setAttribute('color', new THREE.BufferAttribute(colors, 3));
 
-          // 中心に合わせる（オプション）
           const center = new THREE.Vector3();
           for (let i = 0; i < positions.length; i += 3) {
             center.add(new THREE.Vector3(positions[i], positions[i + 1], positions[i + 2]));
@@ -106,12 +131,8 @@
           pointCloud = new THREE.Points(geometry, material);
           pointCloud.visible = false;
           scene.add(pointCloud);
-        })
-        .catch(err => {
-          console.error('点群読み込みエラー:', err);
         });
 
-      // 毎フレーム処理
       renderer.setAnimationLoop((timestamp, frame) => {
         if (frame && hitTestSource) {
           const hitTestResults = frame.getHitTestResults(hitTestSource);
@@ -126,6 +147,23 @@
         }
 
         renderer.render(scene, camera);
+      });
+
+      // UI制御
+      const sizeSlider = document.getElementById('sizeSlider');
+      const toggleButton = document.getElementById('toggleButton');
+
+      sizeSlider.addEventListener('input', () => {
+        if (pointCloud) {
+          pointCloud.material.size = parseFloat(sizeSlider.value);
+        }
+      });
+
+      toggleButton.addEventListener('click', () => {
+        if (pointCloud) {
+          pointCloud.visible = !pointCloud.visible;
+          toggleButton.textContent = pointCloud.visible ? '非表示' : '表示';
+        }
       });
     </script>
   </body>
